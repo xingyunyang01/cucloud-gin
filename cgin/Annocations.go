@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/xingyunyang01/cucloud-gin/cgin/ioc"
 )
 
 // 注解处理
@@ -31,8 +33,7 @@ func init() {
 }
 
 type Value struct {
-	tag         reflect.StructTag
-	Beanfactory *BeanFactory
+	tag reflect.StructTag
 }
 
 func (this *Value) SetTag(tag reflect.StructTag) {
@@ -45,7 +46,7 @@ func (this *Value) String() string {
 		return ""
 	}
 	prefix := strings.Split(get_prefix, ".") //把tag值按.进行分割，放入切片中
-	if config := this.Beanfactory.GetBean(new(SysConfig)); config != nil {
+	if config := ioc.BeanFactory.Get(new(SysConfig)); config != nil {
 		get_value := GetConfigValue(config.(*SysConfig).Config, prefix, 0)
 		if get_value != nil {
 			return fmt.Sprintf("%v", get_value)

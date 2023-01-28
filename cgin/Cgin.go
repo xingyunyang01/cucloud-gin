@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/xingyunyang01/cucloud-gin/cgin/fairing"
+	"github.com/xingyunyang01/cucloud-gin/cgin/ioc"
 	"github.com/xingyunyang01/cucloud-gin/cgin/task"
 )
 
@@ -14,20 +15,20 @@ type Cgin struct {
 	*gin.Engine                   //gin.New()的返回值
 	g            *gin.RouterGroup //路由组
 	currentGroup string           // temp-var for group string
-	beanFactory  *BeanFactory
+	exprData     map[string]interface{}
 }
 
 func Init() *Cgin {
-	g := &Cgin{Engine: gin.New(), beanFactory: NewBeanFactory()}
-	g.Use(ErrorHandler())               //强迫加载的异常处理中间件
-	g.beanFactory.setBean(InitConfig()) //整个配置加载进bean中
+	g := &Cgin{Engine: gin.New(), exprData: make(map[string]interface{})}
+	g.Use(ErrorHandler())             //强迫加载的异常处理中间件
+	ioc.BeanFactory.Set(InitConfig()) //整个配置加载进bean中
 
 	return g
 }
 
 func (this *Cgin) Launch() {
 	var port int32 = 8080
-	if config := this.beanFactory.GetBean(new(SysConfig)); config != nil {
+	if config := ioc.BeanFactory.Get((*SysConfig)(nil)); config != nil {
 		port = config.(*SysConfig).Server.Port
 	}
 	task.GetCronTask().Start()
@@ -39,7 +40,7 @@ func (this *Cgin) Mount(group string, classes ...IClass) *Cgin {
 	for _, class := range classes {
 		this.currentGroup = group
 		class.Build(this)
-		this.beanFactory.inject(class) //初始化控制器实体类中的数据库连接对象句柄
+		this.DBBeans(class) //初始化控制器实体类中的数据库连接对象句柄
 	}
 	return this
 }
@@ -59,9 +60,16 @@ func (this *Cgin) Handle(httpMethod, relativePath string, handler interface{}) *
 	return this
 }
 
+type Bean interface {
+	Name() string
+}
+
 // 设定数据库连接对象
-func (this *Cgin) DBBeans(dbbeans ...interface{}) *Cgin {
-	this.beanFactory.setBean(dbbeans...)
+func (this *Cgin) DBBeans(dbbeans ...Bean) *Cgin {
+	for _, bean := range dbbeans {
+		this.exprData[bean.Name()] = bean
+		ioc.BeanFactory.Set(bean)
+	}
 	return this
 }
 
