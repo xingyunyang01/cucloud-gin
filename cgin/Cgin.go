@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"reflect"
 
 	"github.com/gin-gonic/gin"
 	"github.com/xingyunyang01/cucloud-gin/cgin/fairing"
@@ -18,6 +19,7 @@ type Cgin struct {
 	exprData     map[string]interface{}
 }
 
+// 初始化gin客户端
 func Init() *Cgin {
 	g := &Cgin{Engine: gin.New(), exprData: make(map[string]interface{})}
 	g.Use(ErrorHandler())             //强迫加载的异常处理中间件
@@ -26,21 +28,25 @@ func Init() *Cgin {
 	return g
 }
 
+// 运行gin server
 func (this *Cgin) Launch() {
 	var port int32 = 8080
 	if config := ioc.BeanFactory.Get((*SysConfig)(nil)); config != nil {
 		port = config.(*SysConfig).Server.Port
 	}
+	//在启动时注入所有依赖
+	this.applyAll()
 	task.GetCronTask().Start()
 	this.Run(fmt.Sprintf(":%d", port))
 }
 
+// 注册路由
 func (this *Cgin) Mount(group string, classes ...IClass) *Cgin {
 	this.g = this.Group(group)
 	for _, class := range classes {
 		this.currentGroup = group
 		class.Build(this)
-		this.DBBeans(class) //初始化控制器实体类中的数据库连接对象句柄
+		this.Beans(class) //初始化控制器实体类中的数据库连接对象句柄
 	}
 	return this
 }
@@ -64,13 +70,28 @@ type Bean interface {
 	Name() string
 }
 
-// 设定数据库连接对象
-func (this *Cgin) DBBeans(dbbeans ...Bean) *Cgin {
-	for _, bean := range dbbeans {
+// 将beans存入容器
+func (this *Cgin) Beans(beans ...Bean) *Cgin {
+	for _, bean := range beans {
 		this.exprData[bean.Name()] = bean
 		ioc.BeanFactory.Set(bean)
 	}
 	return this
+}
+
+// 封装了依赖注入代码,目的是让用户在main函数中将所有的依赖加入ioc容器
+func (this *Cgin) Config(cfgs ...interface{}) *Cgin {
+	ioc.BeanFactory.Config(cfgs...)
+	return this
+}
+
+// 注入所有依赖
+func (this *Cgin) applyAll() {
+	for t, v := range ioc.BeanFactory.GetBeanMapper() {
+		if t.Elem().Kind() == reflect.Struct {
+			ioc.BeanFactory.Apply(v.Interface())
+		}
+	}
 }
 
 // 中间件构造方法
@@ -87,6 +108,7 @@ func (this *Cgin) Attach(f fairing.Fairing) *Cgin {
 	return this
 }
 
+// 添加定时任务
 func (this *Cgin) Task(expr string, f func()) *Cgin {
 	_, err := task.GetCronTask().AddFunc(expr, f)
 	if err != nil {
