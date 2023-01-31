@@ -1,18 +1,21 @@
 package controllers
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/xingyunyang01/cucloud-gin/cgin"
 	"github.com/xingyunyang01/cucloud-gin/cgin/task"
 	"github.com/xingyunyang01/cucloud-gin/test/src/models"
+	"github.com/xingyunyang01/cucloud-gin/test/src/service"
 	"gorm.io/gorm"
 )
 
+//controllers层负责控制定义路由以及与service层进行整合
+
 type ArticleClass struct {
-	Db *gorm.DB `inject:"-"`
+	Db             *gorm.DB                `inject:"-"`
+	ArticleService *service.ArticleService `inject:"-"`
 }
 
 func NewArticleClass() *ArticleClass {
@@ -22,9 +25,7 @@ func NewArticleClass() *ArticleClass {
 func (this *ArticleClass) ArticleDetail(ctx *gin.Context) cgin.Model {
 	news := models.NewArticleModel()
 	cgin.Error(ctx.ShouldBindUri(news))
-	fmt.Println("11111111111111111")
-	cgin.Error(this.Db.Table("mynews").Where("id=?", news.NewsId).Find(news).Error)
-	fmt.Println("22222222222222222")
+	cgin.Error(this.ArticleService.GetArticleDetail(news, this.Db))
 	task.Task(this.UpdateViews, func() {
 		this.UpdateViewsDone(news.NewsId)
 	}, news.NewsId) //执行一个协程任务
@@ -33,7 +34,7 @@ func (this *ArticleClass) ArticleDetail(ctx *gin.Context) cgin.Model {
 }
 
 func (this *ArticleClass) UpdateViews(params ...interface{}) {
-	this.Db.Table("mynews").Where("id=?", params[0]).Update("views", gorm.Expr("views+1"))
+	this.ArticleService.UpdateViews(params[0], this.Db)
 }
 
 func (this *ArticleClass) UpdateViewsDone(id int) {
