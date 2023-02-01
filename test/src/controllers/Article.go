@@ -22,6 +22,10 @@ func NewArticleClass() *ArticleClass {
 	return &ArticleClass{}
 }
 
+func (this *ArticleClass) Test(ctx *gin.Context) string {
+	return "test"
+}
+
 func (this *ArticleClass) ArticleDetail(ctx *gin.Context) cgin.Model {
 	news := models.NewArticleModel()
 	cgin.Error(ctx.ShouldBindUri(news))
@@ -44,6 +48,7 @@ func (this *ArticleClass) UpdateViewsDone(id int) {
 // 构造路由方法
 func (this *ArticleClass) Build(cgin *cgin.Cgin) {
 	cgin.Handle("GET", "/article/:id", this.ArticleDetail)
+	cgin.Handle("GET", "/article/test", this.Test)
 }
 
 func (this *ArticleClass) Name() string {

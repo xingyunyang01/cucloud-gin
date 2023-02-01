@@ -14,9 +14,9 @@ func (this *AddVersion) OnRequest(ctx *gin.Context) error {
 }
 
 func (this *AddVersion) OnResponse(result interface{}) (interface{}, error) {
-	if m, ok := result.(gin.H); ok {
-		m["version"] = "1.0"
-		return m, nil
+	if str, ok := result.(string); ok {
+		str = str + "_version_1.0"
+		return str, nil
 	}
 	return result, nil
 }

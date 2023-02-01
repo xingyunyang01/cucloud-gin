@@ -12,7 +12,7 @@ import (
 func main() {
 	cgin.Init().
 		Config(configuration.NewDBConfig(), configuration.NewServiceConfig()).
-		Attach(middlewares.NewTokenCheck()).
+		Attach(middlewares.NewTokenCheck(), middlewares.NewAddVersion()).
 		Mount("v1", controllers.NewArticleClass()).
 		Task("0/3 * * * * *", func() { //添加定时任务
 			log.Println("开始定时任务")

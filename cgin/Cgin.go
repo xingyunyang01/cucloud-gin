@@ -3,11 +3,9 @@ package cgin
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"reflect"
 
 	"github.com/gin-gonic/gin"
-	"github.com/xingyunyang01/cucloud-gin/cgin/fairing"
 	"github.com/xingyunyang01/cucloud-gin/cgin/ioc"
 	"github.com/xingyunyang01/cucloud-gin/cgin/task"
 )
@@ -96,15 +94,9 @@ func (this *Cgin) applyAll() {
 
 // 中间件构造方法
 // 将中间件实现方法封装到了用户中间件类，并通过接口的方式实现了统一
-func (this *Cgin) Attach(f fairing.Fairing) *Cgin {
-	this.Use(func(ctx *gin.Context) { //添加中间件函数
-		err := f.OnRequest(ctx) //具体的中间件业务逻辑
-		if err != nil {         //报错则返回错误
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		} else { //不报错则通过中间件，继续向下走
-			ctx.Next()
-		}
-	})
+func (this *Cgin) Attach(mid ...Middleware) *Cgin {
+	getMiddlewareHandler().AddMiddleware(mid...)
+
 	return this
 }
 
