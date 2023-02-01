@@ -26,7 +26,7 @@ func (this *ArticleClass) Test(ctx *gin.Context) string {
 	return "test"
 }
 
-func (this *ArticleClass) ArticleDetail(ctx *gin.Context) cgin.Model {
+func (this *ArticleClass) ArticleDetail(ctx *gin.Context) cgin.Json {
 	news := models.NewArticleModel()
 	cgin.Error(ctx.ShouldBindUri(news))
 	cgin.Error(this.ArticleService.GetArticleDetail(news, this.Db))

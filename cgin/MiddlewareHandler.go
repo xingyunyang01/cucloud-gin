@@ -53,10 +53,10 @@ func (this *MiddlewareHandler) RunMiddlerWare(responder Responder, ctx *gin.Cont
 	var ret interface{}
 	if strfunc, ok := responder.(StringResponder); ok {
 		ret = strfunc(ctx)
-	} else if modelfunc, ok := responder.(ModelResponder); ok {
-		ret = modelfunc(ctx)
-	} else if modelsfunc, ok := responder.(ModelsResponder); ok {
-		ret = modelsfunc(ctx)
+	} else if jsonfunc, ok := responder.(JsonResponder); ok {
+		ret = jsonfunc(ctx)
+	} else if voidfunc, ok := responder.(VoidResponder); ok {
+		ret = voidfunc(ctx)
 	}
 
 	return getMiddlewareHandler().doResponse(ctx, ret)

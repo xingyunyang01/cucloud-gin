@@ -112,7 +112,7 @@ func (this *BeanFactoryImpl) Config(cfgs ...interface{}) {
 			callRet := method.Call(nil) //执行类方法
 
 			if callRet != nil && len(callRet) == 1 {
-				this.Set(callRet[0].Interface()) //将类方法的执行加过塞入到ioc容器中
+				this.Set(callRet[0].Interface()) //将类方法的执行结果塞入到ioc容器中
 			}
 		}
 	}

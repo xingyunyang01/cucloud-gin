@@ -13,8 +13,8 @@ var ResponderList []Responder
 // 初始化切片，塞入StringResponder(new之后是指针类型)
 func init() {
 	ResponderList = []Responder{new(StringResponder),
-		new(ModelResponder),
-		new(ModelsResponder),
+		new(JsonResponder),
+		new(VoidResponder),
 	}
 }
 
@@ -49,21 +49,22 @@ func (this StringResponder) RespondTo() gin.HandlerFunc {
 	}
 }
 
-// 返回值为Model类型的HandlerFunc
-type ModelResponder func(ctx *gin.Context) Model
+// 返回值为Json类型的HandlerFunc
+type Json interface{}
+type JsonResponder func(ctx *gin.Context) Json
 
-func (this ModelResponder) RespondTo() gin.HandlerFunc {
+func (this JsonResponder) RespondTo() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, getMiddlewareHandler().RunMiddlerWare(this, ctx))
 	}
 }
 
-// 返回值为Models类型的HandlerFunc
-type ModelsResponder func(ctx *gin.Context) Models
+// 返回值为void类型的HandlerFunc
+type Void struct{}
+type VoidResponder func(ctx *gin.Context) Void
 
-func (this ModelsResponder) RespondTo() gin.HandlerFunc {
-	return func(ctx *gin.Context) { //由于this(ctx)的返回值是string，因此想让网页以json形式显示，就必须写成如下形式
-		ctx.Writer.Header().Set("Content-type", "application/json")
-		ctx.Writer.WriteString(getMiddlewareHandler().RunMiddlerWare(this, ctx).(string))
+func (this VoidResponder) RespondTo() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		getMiddlewareHandler().RunMiddlerWare(this, ctx)
 	}
 }
