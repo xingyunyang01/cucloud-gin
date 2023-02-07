@@ -18,9 +18,12 @@ type Cgin struct {
 }
 
 // 初始化gin客户端
-func Init() *Cgin {
+func Init(ginMiddlewares ...gin.HandlerFunc) *Cgin {
 	g := &Cgin{Engine: gin.New(), exprData: make(map[string]interface{})}
-	g.Use(ErrorHandler())             //强迫加载的异常处理中间件
+	g.Use(ErrorHandler()) //强迫加载的异常处理中间件
+	for _, handler := range ginMiddlewares {
+		g.Use(handler)
+	}
 	ioc.BeanFactory.Set(InitConfig()) //整个配置加载进bean中
 
 	return g
