@@ -13,9 +13,9 @@ func LoadConfigFile() []byte {
 	var file string
 
 	if sysType == "linux" {
-		file = dir + "/application.yaml"
+		file = dir + "/sys.yaml"
 	} else if sysType == "windows" {
-		file = dir + "\\application.yaml"
+		file = dir + "\\sys.yaml"
 	}
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
