@@ -87,7 +87,7 @@ func (this *Cgin) Config(cfgs ...interface{}) *Cgin {
 }
 
 // 有些场景会用到注入的依赖，因此封装函数将其取出
-func (this *Cgin) GetConfig(v interface{}) interface{} {
+func GetConfig(v interface{}) interface{} {
 	return ioc.BeanFactory.Get(v)
 }
 
